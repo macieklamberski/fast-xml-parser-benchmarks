@@ -8,5 +8,5 @@ for size in 0 10 30 65 100; do
     "node bench.mjs optimized $size" \
     --command-name "Original ($size stopNodes)" \
     --command-name "Optimized ($size stopNodes)"
-  echo ""
+  echo " "
 done
