@@ -1,4 +1,4 @@
-# fast-xml-parser StopNodes Optimization Benchmarks
+# StopNodes Optimization Benchmarks
 
 Benchmarks comparing the original `fast-xml-parser` with an optimized version that uses O(1) Set-based stopNodes lookup instead of O(n) array iteration.
 
@@ -35,11 +35,11 @@ StopNodes \ Items |         10 |         20 |         50 |        100 |
 ## Key Findings
 
 **Performance scales with stopNodes count:**
-- ✅ **0 stopNodes**: ~1.00x (no regression at baseline)
-- ✅ **10 stopNodes**: ~5-11% faster
-- ✅ **25 stopNodes**: ~4-20% faster
-- ✅ **50 stopNodes**: ~12-39% faster
-- ✅ **100 stopNodes**: ~17-48% faster
+- **0 stopNodes**: ~1.00x (no regression at baseline)
+- **10 stopNodes**: ~5-11% faster
+- **25 stopNodes**: ~4-20% faster
+- **50 stopNodes**: ~12-39% faster
+- **100 stopNodes**: ~17-48% faster
 
 **Original implementation degrades linearly (O(n))** as stopNodes increase, while **optimized version maintains constant performance (O(1))**.
 
