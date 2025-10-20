@@ -9,6 +9,8 @@ npm install
 ./bench.sh
 ```
 
+Or run in the Github Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions/workflows/benchmark.yml.
+
 ## What's Being Tested
 
 RSS feed parsing performance with varying `stopNodes` configurations:
