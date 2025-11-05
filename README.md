@@ -1,4 +1,4 @@
-# StopNodes Optimization Benchmarks
+**PR:** [#769 - perf: Use Set for stopNodes lookup O(1) instead of array iteration O(n)](https://github.com/NaturalIntelligence/fast-xml-parser/pull/769)
 
 Benchmarks comparing the original `fast-xml-parser` with an optimized version that uses O(1) Set-based stopNodes lookup instead of O(n) array iteration.
 
@@ -9,7 +9,7 @@ npm install
 ./bench.sh
 ```
 
-Or run in the Github Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions/workflows/benchmark.yml.
+Or run in the Github Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions.
 
 ## What's Being Tested
 

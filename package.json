@@ -2,7 +2,7 @@
   "name": "fast-xml-parser-benchmarks",
   "type": "module",
   "dependencies": {
-    "fast-xml-parser": "^5.3.0",
+    "fast-xml-parser": "5.3.0",
     "fast-xml-parser-optimized": "github:macieklamberski/fast-xml-parser#perf/optimize-wildcard-stopnodes"
   }
 }
