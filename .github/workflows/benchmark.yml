@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - perf/optimize-wildcard-stopnodes
+          - perf/entity-replacement-early-exit
 
 jobs:
   benchmark:
