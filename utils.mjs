@@ -1,12 +1,19 @@
-export function generateFeedXml(itemCount = 50) {
+export function generateFeedXml(itemCount = 50, withEntities = false) {
 	const items = []
 
 	for (let i = 0; i < itemCount; i++) {
+		const description = withEntities
+			? `Description &lt;with&gt; &amp; &quot;entities&quot; for episode ${i}`
+			: `Description for episode ${i}`
+		const summary = withEntities
+			? `Summary &lt;with&gt; &amp; &quot;entities&quot; ${i}`
+			: `Summary ${i}`
+
 		items.push(`
       <item>
         <title>Episode ${i}</title>
         <link>https://example.com/episode-${i}</link>
-        <description>Description for episode ${i}</description>
+        <description>${description}</description>
         <author>author@example.com</author>
         <category>Technology</category>
         <comments>https://example.com/comments-${i}</comments>
@@ -16,7 +23,7 @@ export function generateFeedXml(itemCount = 50) {
         <content:encoded><![CDATA[Full content for episode ${i}]]></content:encoded>
         <itunes:author>John Doe</itunes:author>
         <itunes:subtitle>Subtitle ${i}</itunes:subtitle>
-        <itunes:summary>Summary ${i}</itunes:summary>
+        <itunes:summary>${summary}</itunes:summary>
         <itunes:duration>3600</itunes:duration>
       </item>
     `)

@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 
-const STOP_NODES = [0, 10, 25, 50, 100]
+const ENTITY_TYPES = ['with-entities', 'without-entities']
 const ITEMS = [10, 20, 50, 100]
 
 const results = {}
@@ -12,17 +12,17 @@ try {
 
   for (const file of files) {
     if (file.endsWith('.json')) {
-      const match = file.match(/bench_(\d+)_(\d+)\.json/)
+      const match = file.match(/bench_(with|without)-entities_(\d+)\.json/)
 
       if (match) {
-        const stopNodes = parseInt(match[1])
+        const entityType = match[1] === 'with' ? 'with-entities' : 'without-entities'
         const items = parseInt(match[2])
         const data = JSON.parse(readFileSync(join(resultsDir, file), 'utf-8'))
 
-        if (!results[stopNodes]) {
-          results[stopNodes] = {}
+        if (!results[entityType]) {
+          results[entityType] = {}
         }
-        results[stopNodes][items] = {
+        results[entityType][items] = {
           original: data.results[0].mean * 1000,
           optimized: data.results[1].mean * 1000,
         }
@@ -56,7 +56,7 @@ function printTableHeader(title) {
 function printMatrix(title, valueExtractor) {
   printTableHeader(title)
 
-  let header = 'StopNodes \\ Items |'
+  let header = 'Entity Type \\ Items |'
 
   for (const items of ITEMS) {
     header += ` ${items.toString().padStart(10)} |`
@@ -64,11 +64,12 @@ function printMatrix(title, valueExtractor) {
 
   console.log(header)
 
-  for (const stopNodes of STOP_NODES) {
-    let row = `${stopNodes.toString().padStart(17)} |`
+  for (const entityType of ENTITY_TYPES) {
+    const label = entityType === 'with-entities' ? 'With Entities' : 'Without'
+    let row = `${label.padStart(19)} |`
 
     for (const items of ITEMS) {
-      const value = results[stopNodes]?.[items]
+      const value = results[entityType]?.[items]
 
       if (value) {
         row += ` ${valueExtractor(value).padStart(10)} |`

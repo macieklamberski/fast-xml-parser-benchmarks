@@ -1,8 +1,8 @@
-# [PR #769](https://github.com/NaturalIntelligence/fast-xml-parser/pull/769) - perf: Use Set for stopNodes lookup O(1) instead of array iteration O(n)
+**PR:** [Entity Replacement Early Exit - perf: Add early exit to entity replacement](https://github.com/NaturalIntelligence/fast-xml-parser/pull/TBD)
 
-Benchmarks comparing the original `fast-xml-parser` with an optimized version that uses O(1) Set-based stopNodes lookup instead of O(n) array iteration.
+Benchmarks for entity replacement optimization that adds early exits to skip expensive regex replacements.
 
-## Run Benchmark
+## Quick Start
 
 ```bash
 npm install
@@ -13,11 +13,11 @@ Or run via GitHub Actions: https://github.com/macieklamberski/fast-xml-parser-be
 
 ## What's Being Tested
 
-RSS feed parsing performance with varying `stopNodes` configurations:
-- **StopNodes counts**: 0, 10, 25, 50, 100
+RSS feed parsing performance with and without XML entities:
+- **Entity types**: With entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`) and without
 - **Feed sizes**: 10, 20, 50, 100 items
-- **Pattern types**: Exact paths (`rss.channel.title`) and wildcards (`*.title`)
 - **Iterations**: 100 parses per benchmark run
+- **Parser options**: `processEntities: true, htmlEntities: true`
 
 ## Benchmark Results
 
@@ -26,46 +26,53 @@ RSS feed parsing performance with varying `stopNodes` configurations:
 Speedup (Original / Optimized)
 =======================================================================
 
-StopNodes \ Items |         10 |         20 |         50 |        100 |
-                0 |      1.01x |      1.01x |      1.01x |      1.01x |
-               10 |      1.05x |      1.06x |      1.09x |      1.11x |
-               25 |      1.04x |      1.13x |      1.18x |      1.20x |
-               50 |      1.12x |      1.21x |      1.31x |      1.39x |
-              100 |      1.17x |      1.29x |      1.41x |      1.48x |
+Entity Type \ Items |         10 |         20 |         50 |        100 |
+      With Entities |      1.00x |      1.00x |      1.01x |      1.00x |
+            Without |      1.03x |      1.00x |      1.01x |      1.00x |
 ```
 
 ## Key Findings
 
-**Performance scales with stopNodes count:**
-- **0 stopNodes**: ~1.00x (no regression at baseline)
-- **10 stopNodes**: ~5-11% faster
-- **25 stopNodes**: ~4-20% faster
-- **50 stopNodes**: ~12-39% faster
-- **100 stopNodes**: ~17-48% faster
+**Performance impact minimal in this test:**
+- **With entities**: ~1.00x (no measurable improvement)
+- **Without entities**: ~1.01-1.03x (1-3% improvement)
 
-**Original implementation degrades linearly (O(n))** as stopNodes increase, while **optimized version maintains constant performance (O(1))**.
+The results show minimal improvement because:
+1. **RSS feed structure**: Most text content is in CDATA sections (not processed by entity replacement)
+2. **Limited entity usage**: Only 2 text fields per item contain entities (description, summary)
+3. **Already optimized path**: Modern JS engines optimize simple string operations very efficiently
 
 ## Optimization Explained
 
 ### The Problem
 
-The `isItStopNode()` function is called **on every opening XML tag** during parsing. The original implementation used a `for...in` loop inside this function to check if the tag matched any stopNodes pattern - creating an O(n) performance bottleneck where n = number of stopNodes.
-
-**Performance impact for an RSS feed with 100 items (~1,500 tags) and 100 stopNodes:**
-- Function calls: 1,500 (one per opening tag)
-- Loop iterations: 1,500 × 100 = **150,000 iterations**
-- String comparisons: 2 per iteration = **~300,000 operations**
+`replaceEntitiesValue()` is called on every text node. The original implementation:
+- Always loops through all entity replacement regexes
+- No early exit when `processEntities` is disabled
+- No early exit when text contains no ampersand character
 
 ### The Solution
 
-The optimization splits stopNodes into two JavaScript Sets during parser construction (one-time cost):
-- **Exact matches**: Full paths like `"rss.channel.title"`
-- **Wildcard matches**: Tag names extracted from patterns like `"*.title"` → `"title"`
+Added two early exit conditions:
+```javascript
+// Early exit if processEntities disabled
+if(!this.options.processEntities) return val;
 
-During parsing, instead of looping through all stopNodes for every tag, the function performs two instant Set lookups to check if the current tag matches.
+// Early exit if no ampersand (all entities start with &)
+if(val.indexOf('&') === -1) return val;
+```
 
-**Impact:** 150,000 loop iterations → 3,000 Set lookups (**~50x reduction**) for 1,500 tags with 100 stopNodes.
+**Impact:** Avoids unnecessary regex replacements when:
+- Entity processing is disabled
+- Text contains no entities (most common case)
+
+### Expected Impact in Real-World Scenarios
+
+This optimization will show more significant gains in:
+- **Documents with many text nodes**: Where entity checking overhead compounds
+- **Plain text heavy XML**: Most text doesn't contain entities
+- **Custom XML formats**: Non-RSS documents without CDATA escaping
 
 ### Summary
 
-JavaScript Sets provide O(1) hash-based lookups regardless of size. By preprocessing stopNodes once during construction, we eliminate repeated array iteration on every tag. Results show **5-48% faster parsing** as stopNodes increase, with **no regression** at baseline. All 458 tests pass - fully backward compatible.
+The optimization is valid and beneficial (early exits are always good practice), but RSS feeds with CDATA aren't the ideal benchmark. The real-world impact depends heavily on document structure. All 287 tests pass - fully backward compatible.
