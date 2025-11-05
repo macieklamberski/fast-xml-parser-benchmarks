@@ -10,6 +10,7 @@ on:
         options:
           - perf/optimize-wildcard-stopnodes
           - perf/entity-replacement-early-exit
+          - perf/getallmatches-array-copy
 
 jobs:
   benchmark:
