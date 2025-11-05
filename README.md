@@ -2,7 +2,7 @@
 
 Benchmarks comparing the original `fast-xml-parser` with an optimized version that uses O(1) Set-based stopNodes lookup instead of O(n) array iteration.
 
-## Quick Start
+## Run Benchmark
 
 ```bash
 npm install
