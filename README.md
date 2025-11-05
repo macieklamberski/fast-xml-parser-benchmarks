@@ -1,4 +1,4 @@
-**PR:** [Entity Replacement Early Exit - perf: Add early exit to entity replacement](https://github.com/NaturalIntelligence/fast-xml-parser/pull/TBD)
+# [PR #???](https://github.com/NaturalIntelligence/fast-xml-parser/pull/???) - perf: Skip entity replacement when no ampersand in value
 
 Benchmarks for entity replacement optimization that adds early exit to skip expensive regex replacements when no ampersand is present.
 
@@ -13,58 +13,62 @@ Or run via GitHub Actions: https://github.com/macieklamberski/fast-xml-parser-be
 
 ## What's Being Tested
 
-RSS feed parsing performance with and without XML entities:
-- **Entity types**: With entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`) and without
+RSS feed parsing performance with different configurations:
+- **Parser configs**: Default (`htmlEntities: false`) and Full (`htmlEntities: true`), both with `processEntities: true`
+- **Entity presence**: With entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`) and without
 - **Feed sizes**: 10, 20, 50, 100 items
 - **Iterations**: 100 parses per benchmark run
-- **Parser options**: `processEntities: true, htmlEntities: true` (always enabled)
 
 ## Benchmark Results
 
 ```
-=======================================================================
-Original Parser - Execution Time
-=======================================================================
+===========================================================================
+Speedup (Original / Optimized) - DEFAULT (processEntities: true, htmlEntities: false)
+===========================================================================
 
 Entity Type \ Items |         10 |         20 |         50 |        100 |
-      With Entities |    85.89ms |   116.59ms |   216.13ms |   367.81ms |
-            Without |    86.69ms |   112.40ms |   207.03ms |   355.56ms |
+            Without |      1.05x |      1.02x |      1.06x |      1.07x |
+      With Entities |      1.04x |      1.03x |      1.06x |      1.05x |
 
-=======================================================================
-Optimized Parser - Execution Time
-=======================================================================
-
-Entity Type \ Items |         10 |         20 |         50 |        100 |
-      With Entities |    77.62ms |   103.41ms |   180.43ms |   312.60ms |
-            Without |    75.40ms |    97.86ms |   167.10ms |   277.21ms |
-
-=======================================================================
-Speedup (Original / Optimized)
-=======================================================================
+===========================================================================
+Speedup (Original / Optimized) - FULL (processEntities: true, htmlEntities: true)
+===========================================================================
 
 Entity Type \ Items |         10 |         20 |         50 |        100 |
-      With Entities |      1.11x |      1.13x |      1.20x |      1.18x |
-            Without |      1.15x |      1.15x |      1.24x |      1.28x |
+            Without |      1.17x |      1.13x |      1.24x |      1.27x |
+      With Entities |      1.09x |      1.11x |      1.15x |      1.24x |
 ```
 
 ## Key Findings
 
-**Significant performance improvements:**
-- **With entities**: 1.11x - 1.20x (11-20% faster)
-- **Without entities**: 1.15x - 1.28x (15-28% faster)
+**Default configuration (most common in production):**
+- **Without entities**: 1.05x - 1.07x (5-7% faster) ← **MAIN BENEFIT**
+- **With entities**: 1.03x - 1.06x (3-6% faster)
 
-**Why "without entities" shows bigger improvement:**
-- Both test cases have `processEntities: true` enabled
-- **"Without entities"**: Plain text, no `&` character → early exit skips ALL regex replacements
-- **"With entities"**: Contains `&` character → still processes all regexes, but saves overhead
+**Full HTML entity processing:**
+- **Without entities**: 1.13x - 1.27x (13-27% faster)
+- **With entities**: 1.09x - 1.24x (9-24% faster)
 
-The optimization shines when entity processing is enabled but most text nodes don't contain entities (common case).
+**Why this matters:**
+- `processEntities: true` is the default setting
+- Most XML text nodes don't contain entities (no `&` character)
+- This optimization provides **5-7% improvement** in the most common real-world case
+- Bigger gains (13-27%) when `htmlEntities: true` is enabled (more regexes to skip)
 
 ## Optimization Explained
 
 ### The Problem
 
-`replaceEntitiesValue()` is called on every text node. When `processEntities: true`, the original implementation loops through all entity replacement regexes even when the text contains no entities (no `&` character).
+`replaceEntitiesValue()` is called on every text node. When `processEntities: true`, the original implementation loops through all entity replacement regexes even when the text contains no entities.
+
+**Default config has 3-4 regex replacements per text node:**
+- docType entities
+- internal entities
+- ampersand entity
+
+**Full config has 100+ regex replacements per text node:**
+- All of the above
+- Complete HTML entities set (`&nbsp;`, `&copy;`, etc.)
 
 ### The Solution
 
@@ -82,11 +86,11 @@ const replaceEntitiesValue = function(val){
 }
 ```
 
-**Impact:** When entity processing is enabled but text has no `&`:
-- **Before:** Runs 4+ regex replacements per text node
+**Impact on plain text (no `&` character):**
+- **Before:** Runs all regex replacements per text node
 - **After:** One `indexOf` check, immediate return
-- **Result:** 15-28% faster for plain text
+- **Result:** 5-7% faster (default), 13-27% faster (full HTML entities)
 
 ### Summary
 
-Simple optimization with significant real-world impact. Most XML text nodes don't contain entities, but many parsers enable `processEntities` for safety. This change avoids unnecessary regex work in the common case. All 287 tests pass - fully backward compatible.
+Simple, surgical optimization with measurable real-world impact. The default `processEntities: true` setting processes entities for safety, but most XML text is plain. This change provides **5-7% improvement** in the common case with zero regression. When HTML entities are enabled, gains increase to 13-27%. All 287 tests pass - fully backward compatible.

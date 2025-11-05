@@ -1,7 +1,8 @@
 import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 
-const ENTITY_TYPES = ['with-entities', 'without-entities']
+const HTML_ENTITIES = ['no-html-entities', 'html-entities']
+const ENTITY_TYPES = ['without-entities', 'with-entities']
 const ITEMS = [10, 20, 50, 100]
 
 const results = {}
@@ -12,17 +13,21 @@ try {
 
   for (const file of files) {
     if (file.endsWith('.json')) {
-      const match = file.match(/bench_(with|without)-entities_(\d+)\.json/)
+      const match = file.match(/bench_(no-html-entities|html-entities)_(with|without)-entities_(\d+)\.json/)
 
       if (match) {
-        const entityType = match[1] === 'with' ? 'with-entities' : 'without-entities'
-        const items = parseInt(match[2])
+        const htmlEntities = match[1]
+        const entityType = match[2] === 'with' ? 'with-entities' : 'without-entities'
+        const items = parseInt(match[3])
         const data = JSON.parse(readFileSync(join(resultsDir, file), 'utf-8'))
 
-        if (!results[entityType]) {
-          results[entityType] = {}
+        if (!results[htmlEntities]) {
+          results[htmlEntities] = {}
         }
-        results[entityType][items] = {
+        if (!results[htmlEntities][entityType]) {
+          results[htmlEntities][entityType] = {}
+        }
+        results[htmlEntities][entityType][items] = {
           original: data.results[0].mean * 1000,
           optimized: data.results[1].mean * 1000,
         }
@@ -38,23 +43,20 @@ function formatTime(ms) {
   return `${ms.toFixed(2)}ms`
 }
 
-function formatSpeedup(original, optimized) {
-  const speedup = original / optimized
-  const color = speedup > 1 ? '\x1b[32m' : '\x1b[31m'
-  const reset = '\x1b[0m'
-  return `${color}${speedup.toFixed(2)}x${reset}`
-}
-
 function printTableHeader(title) {
   console.log()
-  console.log('='.repeat(71))
+  console.log('='.repeat(75))
   console.log(title)
-  console.log('='.repeat(71))
+  console.log('='.repeat(75))
   console.log()
 }
 
-function printMatrix(title, valueExtractor) {
-  printTableHeader(title)
+function printMatrix(htmlEntitiesMode, title, valueExtractor) {
+  const modeLabel = htmlEntitiesMode === 'no-html-entities'
+    ? 'DEFAULT (processEntities: true, htmlEntities: false)'
+    : 'FULL (processEntities: true, htmlEntities: true)'
+
+  printTableHeader(`${title} - ${modeLabel}`)
 
   let header = 'Entity Type \\ Items |'
 
@@ -69,7 +71,7 @@ function printMatrix(title, valueExtractor) {
     let row = `${label.padStart(19)} |`
 
     for (const items of ITEMS) {
-      const value = results[entityType]?.[items]
+      const value = results[htmlEntitiesMode]?.[entityType]?.[items]
 
       if (value) {
         row += ` ${valueExtractor(value).padStart(10)} |`
@@ -82,6 +84,9 @@ function printMatrix(title, valueExtractor) {
   }
 }
 
-printMatrix('Original Parser - Execution Time', (v) => formatTime(v.original))
-printMatrix('Optimized Parser - Execution Time', (v) => formatTime(v.optimized))
-printMatrix('Speedup (Original / Optimized)', (v) => `${(v.original / v.optimized).toFixed(2)}x`)
+// Print results for each htmlEntities mode
+for (const htmlEntitiesMode of HTML_ENTITIES) {
+  printMatrix(htmlEntitiesMode, 'Speedup (Original / Optimized)', (v) => `${(v.original / v.optimized).toFixed(2)}x`)
+}
+
+console.log()
