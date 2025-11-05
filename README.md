@@ -9,7 +9,7 @@ npm install
 ./bench.sh
 ```
 
-Or run in the Github Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions.
+Or run via GitHub Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions/workflows/benchmark.yml (select this branch from the dropdown).
 
 ## What's Being Tested
 
