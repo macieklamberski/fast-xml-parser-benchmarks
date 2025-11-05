@@ -83,44 +83,4 @@ function printMatrix(title, valueExtractor) {
 
 printMatrix('Original Parser - Execution Time', (v) => formatTime(v.original))
 printMatrix('Optimized Parser - Execution Time', (v) => formatTime(v.optimized))
-
-printMatrix('Speedup (Original / Optimized)', (v) => {
-  const speedup = v.original / v.optimized
-  return `${speedup.toFixed(2)}x`
-})
-
-printTableHeader('Summary Statistics')
-
-let totalSpeedup = 0
-let count = 0
-let maxSpeedup = 0
-let minSpeedup = Infinity
-let maxSpeedupConfig = ''
-let minSpeedupConfig = ''
-
-for (const stopNodes of STOP_NODES) {
-  for (const items of ITEMS) {
-    const value = results[stopNodes]?.[items]
-    if (value) {
-      const speedup = value.original / value.optimized
-      totalSpeedup += speedup
-      count++
-
-      if (speedup > maxSpeedup) {
-        maxSpeedup = speedup
-        maxSpeedupConfig = `stopNodes=${stopNodes}, items=${items}`
-      }
-      if (speedup < minSpeedup) {
-        minSpeedup = speedup
-        minSpeedupConfig = `stopNodes=${stopNodes}, items=${items}`
-      }
-    }
-  }
-}
-
-const avgSpeedup = totalSpeedup / count
-
-console.log(`Average Speedup: ${formatSpeedup(avgSpeedup, 1)}`)
-console.log(`Maximum Speedup: ${formatSpeedup(maxSpeedup, 1)} at ${maxSpeedupConfig}`)
-console.log(`Minimum Speedup: ${formatSpeedup(minSpeedup, 1)} at ${minSpeedupConfig}`)
-console.log()
+printMatrix('Speedup (Original / Optimized)', (v) => `${(v.original / v.optimized).toFixed(2)}x`)

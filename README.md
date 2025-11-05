@@ -1,8 +1,8 @@
-**PR:** [#769 - perf: Use Set for stopNodes lookup O(1) instead of array iteration O(n)](https://github.com/NaturalIntelligence/fast-xml-parser/pull/769)
+# [PR #769](https://github.com/NaturalIntelligence/fast-xml-parser/pull/769) - perf: Use Set for stopNodes lookup O(1) instead of array iteration O(n)
 
 Benchmarks comparing the original `fast-xml-parser` with an optimized version that uses O(1) Set-based stopNodes lookup instead of O(n) array iteration.
 
-## Quick Start
+## Run Benchmark
 
 ```bash
 npm install
