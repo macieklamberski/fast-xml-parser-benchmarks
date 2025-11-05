@@ -1,0 +1,32 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run benchmarks on'
+        required: true
+        type: choice
+        options:
+          - perf/optimize-wildcard-stopnodes
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install hyperfine
+        run: sudo apt install -y hyperfine
+
+      - name: Run benchmarks
+        run: ./bench.sh
