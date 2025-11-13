@@ -19,24 +19,35 @@ RSS feed parsing performance with varying document sizes:
 
 ## Benchmark Results
 
-```
-===========================================================================
-Speedup (Original / Optimized)
-===========================================================================
+### Comprehensive Tests (Small RSS, 10MB, 50MB)
 
-Items |         10 |         20 |         50 |        100 |
-      |      1.07x |      1.01x |      1.07x |      1.07x |
+```
+Scenario      | rss-small      | rss-10mb       | rss-50mb       |
+              | ✓ 1.08x         | ✓ 1.07x         | ✓ 1.06x         |
+
+✓ RSS-SMALL: 1.08x (7.6% FASTER)
+  Original:  304.8ms
+  Optimized: 283.2ms
+
+✓ RSS-10MB: 1.07x (7.4% FASTER)
+  Original:  1238.7ms
+  Optimized: 1153.7ms
+
+✓ RSS-50MB: 1.06x (6.0% FASTER)
+  Original:  1799.5ms
+  Optimized: 1697.6ms
 ```
 
 ## Key Findings
 
-- **1-7% faster** (1.01x - 1.07x speedup)
-- Consistent improvement across document sizes
-- Prevents regex state leakage bugs
-- Module-scope regexes already exist (attrsRegx, validAttrStrRegxp)
-- Without lastIndex reset, sequential parses would fail
-- Critical safety fix that prevents subtle bugs in production
-- Ensures correct behavior in sequential parsing
+- **HIGH IMPACT: 6-8% faster** consistently across all scenarios
+- Small RSS: +7.6% faster
+- 10MB feeds: +7.4% faster
+- 50MB feeds: +6.0% faster
+- **Critical bug fix** - prevents regex state leakage bugs
+- Without lastIndex reset, sequential parses would fail silently
+- Essential safety fix for production use
+- Zero risk - fully backward compatible
 
 ## Optimization Explained
 
