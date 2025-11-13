@@ -19,22 +19,34 @@ RSS feed parsing performance with varying document sizes:
 
 ## Benchmark Results
 
-```
-===========================================================================
-Speedup (Original / Optimized)
-===========================================================================
+### Comprehensive Tests (Small RSS, 10MB, 50MB)
 
-Items |         10 |         20 |         50 |        100 |
-      |      1.04x |      1.02x |      1.07x |      1.08x |
+```
+Scenario      | rss-small      | rss-10mb       | rss-50mb       |
+              | ✗ 0.99x         | ✓ 1.00x         | ✓ 1.02x         |
+
+✗ RSS-SMALL: 0.99x (-1.0% SLOWER)
+  Original:  304.9ms
+  Optimized: 308.0ms
+
+✓ RSS-10MB: 1.00x (0.3% FASTER)
+  Original:  1234.6ms
+  Optimized: 1231.0ms
+
+✓ RSS-50MB: 1.02x (2.2% FASTER)
+  Original:  1835.7ms
+  Optimized: 1795.6ms
 ```
 
 ## Key Findings
 
-- **2-8% faster** (1.02x - 1.08x speedup)
-- Best improvement at 100 items (1.08x)
+- **Minimal impact** - neutral to slightly positive
+- Small RSS: -1% (marginal regression, likely noise)
+- 10MB feeds: +0.3% (neutral)
+- 50MB feeds: +2.2% (slight improvement)
+- Benefit increases with document size
 - Avoids unnecessary trim() allocations when no whitespace present
 - Tag names in clean XML typically have no whitespace
-- Checking before trimming is cheaper than always trimming
 - Zero risk - fully backward compatible
 
 ## Optimization Explained
