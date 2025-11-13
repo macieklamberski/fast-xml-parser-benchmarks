@@ -1,127 +1,79 @@
-# Memory Optimization M1: String Concatenation → Array Push + Join
+# ❌ UNPRODUCTIVE: String Concatenation → Array Push + Join
 
-Benchmarks for array push + join optimization that eliminates intermediate string allocations during text parsing.
+**Status:** Abandoned - produces worse performance in all tested scenarios
 
-## Quick Start
+## Summary
 
-```bash
-npm install
-./bench.sh
-```
-
-Or run via GitHub Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions/workflows/benchmark.yml (select this branch from the dropdown).
-
-## What's Being Tested
-
-RSS feed parsing performance with varying document sizes:
-- **Feed sizes**: 10, 20, 50, 100 items
-- **Iterations**: 100 parses per benchmark run
-- **Text node size**: Moderate (RSS feed descriptions)
+Attempted to optimize string building by replacing character-by-character concatenation with array push + join pattern. Testing revealed this approach is **counterproductive** - V8's string concatenation is already well-optimized.
 
 ## Benchmark Results
 
+### Small Text Nodes (RSS feeds, ~40 chars per node)
+
 ```
 ===========================================================================
-Speedup (Original / Optimized)
+Performance (Original / Optimized)
 ===========================================================================
 
 Items |         10 |         20 |         50 |        100 |
-      |      1.03x |      1.03x |      1.07x |      1.09x |
+      |      0.92x |      0.88x |      0.84x |      0.87x |
 ```
 
-## Key Findings
+**Result:** 8-16% slower
 
-- **3-9% faster** (1.03x - 1.09x speedup)
-- Scales with document size (better for larger docs)
-- Consistent improvement across all test cases
-- Reduces allocation pressure (fewer intermediate string allocations)
-- For large text nodes (10KB+), prevents thousands of intermediate string allocations
+### Large Text Nodes (50KB per node, ~10MB total)
 
-## Optimization Explained
+```
+===========================================================================
+Performance (Original / Optimized)
+===========================================================================
 
-### The Problem
+Items |         10 |         20 |         50 |        100 |
+      |      0.69x |      0.62x |      0.56x |      0.51x |
+```
 
-The parser builds strings character-by-character:
+**Result:** 45-94% slower (gets progressively worse with more text)
+
+## Why It Failed
+
+1. **V8 string concatenation is already optimized** - modern JS engines use rope data structures and optimize small string concatenation
+2. **Array overhead** - allocating arrays, pushing characters, and joining has more overhead than `+=` for typical use cases
+3. **Join cost scales poorly** - `join()` becomes increasingly expensive with large arrays
+4. **Wrong assumption** - theoretical memory benefit doesn't translate to real-world performance
+
+## Original Hypothesis (Incorrect)
+
+The hypothesis was that character-by-character concatenation creates intermediate string allocations:
 
 ```javascript
-// OrderedObjParser.js:394 (BEFORE)
-let textData = "";
-for(let i=0; i< xmlData.length; i++){
-  if(ch !== '<'){
-    textData += xmlData[i];  // Creates new string each iteration
-  }
-}
-
-// tagExpWithClosingIndex (BEFORE)
-let tagExp = "";
-for (let index = i; index < xmlData.length; index++) {
-  tagExp += ch;  // Creates new string each iteration
-}
+// BEFORE
+let text = "";
+text += "H";     // allocate "H"
+text += "e";     // allocate "He", discard "H"
+text += "l";     // allocate "Hel", discard "He"
+// Total: many intermediate allocations
 ```
 
-**Issue for "Hello World" (11 chars):**
-```
-"" → "H" (allocate 1 byte)
-"H" → "He" (allocate 2 bytes, discard 1)
-"He" → "Hel" (allocate 3 bytes, discard 2)
-... (11 allocations total = 66 bytes allocated)
-```
-
-**For 10,000 char text node:**
-- String concatenation: ~50 MB allocated (intermediate strings)
-- Array push + join: ~0.01 MB allocated (just final string)
-
-### The Solution
-
-Replace string concatenation with array accumulation:
+Proposed solution was to use array + join:
 
 ```javascript
-// OrderedObjParser.js (AFTER)
-let textData = "";
-let textDataChars = null; // Array for efficient building
-
-for(let i=0; i< xmlData.length; i++){
-  if(ch !== '<'){
-    if(!textDataChars) textDataChars = [];
-    textDataChars.push(xmlData[i]);  // No string allocation
-  } else {
-    // Join array into string before processing
-    if(textDataChars) {
-      textData = textDataChars.join('');
-      textDataChars = null;
-    }
-  }
-}
-
-// tagExpWithClosingIndex (AFTER)
-const tagExpChars = [];
-for (let index = i; index < xmlData.length; index++) {
-  tagExpChars.push(ch);  // No string allocation
-}
-return {
-  data: tagExpChars.join(''),  // Single allocation
-  index: index
-}
+// AFTER (slower in practice)
+const chars = [];
+chars.push("H");
+chars.push("e");
+chars.push("l");
+const text = chars.join('');  // single allocation
 ```
 
-**Also applied to:**
-- `v6/XmlPartReader.js:66` - V6 parser (future-proofing)
+## Actual Behavior
 
-**Impact on "Hello World":**
-```
-Array: [capacity grows: 4→8→16]
-Push: 11 single-char references (no string copies)
-Join: Single allocation of 11 bytes
-Total: ~16 bytes allocated (vs 66 bytes before)
-```
+V8 optimizes string concatenation through:
+- String interning for small strings
+- Rope data structures for lazy concatenation
+- JIT compilation recognizing concatenation patterns
 
-**Impact on 10,000 char text:**
-```
-BEFORE: ~50 MB intermediate strings
-AFTER: ~0.01 MB (just final string)
-Result: 99.98% reduction in intermediate allocations
-```
+The "optimization" added overhead that outweighed any theoretical benefit.
 
-### Summary
+## Lesson Learned
 
-High-impact optimization that replaces character-by-character string concatenation with array push + join pattern. Eliminates thousands of intermediate string allocations for large text nodes. This provides **3-9% time improvement** and reduces allocation pressure by avoiding intermediate string copies. The benefit scales directly with text node size. All 287 tests pass - fully backward compatible.
+Always benchmark "optimizations" - theoretical improvements may not match real-world performance. Modern JS engines are highly optimized for common patterns like string concatenation.
