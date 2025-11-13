@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - mem/line-ending-normalization
+          - mem/array-push-join
           - mem/conditional-trim
           - mem/reuse-regex
           - perf/optimize-wildcard-stopnodes
