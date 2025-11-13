@@ -21,39 +21,32 @@ RSS feed parsing performance with different configurations:
 
 ## Benchmark Results
 
-```
-===========================================================================
-Speedup (Original / Optimized) - DEFAULT (processEntities: true, htmlEntities: false)
-===========================================================================
+### Comprehensive Tests (Small RSS, 10MB, 50MB)
 
-Entity Type \ Items |         10 |         20 |         50 |        100 |
-            Without |      1.05x |      1.02x |      1.06x |      1.07x |
-      With Entities |      1.04x |      1.03x |      1.06x |      1.05x |
+| Scenario      | rss-small      | rss-10mb       | rss-50mb       |
+|---------------|----------------|----------------|----------------|
+|               | ✓ 1.07x        | ✓ 1.07x        | ✓ 1.06x        |
 
-===========================================================================
-Speedup (Original / Optimized) - FULL (processEntities: true, htmlEntities: true)
-===========================================================================
+**✓ RSS-SMALL: 1.07x (7.4% FASTER)**
+- Original:  304.7ms
+- Optimized: 283.8ms
 
-Entity Type \ Items |         10 |         20 |         50 |        100 |
-            Without |      1.17x |      1.13x |      1.24x |      1.27x |
-      With Entities |      1.09x |      1.11x |      1.15x |      1.24x |
-```
+**✓ RSS-10MB: 1.07x (7.2% FASTER)**
+- Original:  1233.7ms
+- Optimized: 1151.2ms
+
+**✓ RSS-50MB: 1.06x (5.9% FASTER)**
+- Original:  1780.1ms
+- Optimized: 1680.8ms
 
 ## Key Findings
 
-**Default configuration (most common in production):**
-- **Without entities**: 1.05x - 1.07x (5-7% faster) ← **MAIN BENEFIT**
-- **With entities**: 1.03x - 1.06x (3-6% faster)
+**Status: HIGH IMPACT - 6-7% faster consistently**
 
-**Full HTML entity processing:**
-- **Without entities**: 1.13x - 1.27x (13-27% faster)
-- **With entities**: 1.09x - 1.24x (9-24% faster)
-
-**Why this matters:**
+- **6-7% improvement** across all feed sizes
 - `processEntities: true` is the default setting
 - Most XML text nodes don't contain entities (no `&` character)
-- This optimization provides **5-7% improvement** in the most common real-world case
-- Bigger gains (13-27%) when `htmlEntities: true` is enabled (more regexes to skip)
+- One `indexOf` check provides consistent performance gain with zero regression
 
 ## Optimization Explained
 
