@@ -6,8 +6,7 @@ Benchmarks for conditional trim optimization that checks for whitespace presence
 
 ```bash
 npm install
-./bench.sh          # Time benchmarks
-./bench-memory.sh   # Memory benchmarks
+./bench.sh
 ```
 
 Or run via GitHub Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions/workflows/benchmark.yml (select this branch from the dropdown).
@@ -20,8 +19,6 @@ RSS feed parsing performance with varying document sizes:
 
 ## Benchmark Results
 
-### Time Performance
-
 ```
 ===========================================================================
 Speedup (Original / Optimized)
@@ -31,46 +28,13 @@ Items |         10 |         20 |         50 |        100 |
       |      1.04x |      1.02x |      1.07x |      1.08x |
 ```
 
-### Memory Usage
-
-```
-Items: 10
-  Original:  3.97 MB
-  Optimized: 3.96 MB
-  Reduction: 1.00%
-
-Items: 20
-  Original:  3.99 MB
-  Optimized: 3.98 MB
-  Reduction: 1.00%
-
-Items: 50
-  Original:  4.03 MB
-  Optimized: 4.01 MB
-  Reduction: 1.00%
-
-Items: 100
-  Original:  4.07 MB
-  Optimized: 4.05 MB
-  Reduction: 1.00%
-```
-
 ## Key Findings
 
-**Time improvements:**
 - **2-8% faster** (1.02x - 1.08x speedup)
 - Best improvement at 100 items (1.08x)
-- Avoids unnecessary trim() allocations
-
-**Memory improvements:**
-- **~1% memory reduction** across all document sizes
-- Reduces string allocations when no whitespace present
-- Most tag names in well-formed XML have no surrounding whitespace
-
-**Why this matters:**
+- Avoids unnecessary trim() allocations when no whitespace present
 - Tag names in clean XML typically have no whitespace
 - Checking before trimming is cheaper than always trimming
-- Measurable improvements in both speed and memory
 - Zero risk - fully backward compatible
 
 ## Optimization Explained
@@ -131,4 +95,4 @@ let closeTagName = trimIfNeeded(xmlData.substring(i+2,closeIndex));
 
 ### Summary
 
-Simple optimization with measurable dual impact. Adds whitespace detection before trimming tag names - if no whitespace is present (typical in well-formed XML), the expensive trim operation is skipped entirely. This provides **2-8% time improvement** and **~1% memory reduction** across all document sizes. All 287 tests pass - fully backward compatible.
+Simple optimization with measurable impact. Adds whitespace detection before trimming tag names - if no whitespace is present (typical in well-formed XML), the expensive trim operation is skipped entirely. This provides **2-8% time improvement** across all document sizes by avoiding unnecessary string allocations. All 287 tests pass - fully backward compatible.
