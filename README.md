@@ -21,33 +21,35 @@ XML parsing performance with varying attribute counts:
 
 ## Benchmark Results
 
-```
-===========================================================================
-Speedup (Original / Optimized)
-===========================================================================
+### Comprehensive Tests (Small RSS, 10MB, 50MB)
 
-Attributes \ Items |         10 |         20 |         50 |        100 |
-             No attrs |      1.07x |      1.02x |      1.06x |      1.10x |
-              5 attrs |      1.01x |      1.11x |      1.05x |      1.13x |
-             10 attrs |      1.03x |      1.08x |      1.17x |      1.12x |
-             15 attrs |      1.04x |      1.15x |      1.15x |      1.14x |
+```
+Scenario      | rss-small      | rss-10mb       | rss-50mb       |
+              | ✓ 1.07x         | ✓ 1.06x         | ✓ 1.07x         |
+
+✓ RSS-SMALL: 1.07x (7.1% FASTER)
+  Original:  304.0ms
+  Optimized: 283.7ms
+
+✓ RSS-10MB: 1.06x (6.5% FASTER)
+  Original:  1234.8ms
+  Optimized: 1159.8ms
+
+✓ RSS-50MB: 1.07x (6.6% FASTER)
+  Original:  1790.0ms
+  Optimized: 1679.2ms
 ```
 
 ## Key Findings
 
-**Consistent improvements across most scenarios:**
-- **No attributes**: 1.02x - 1.10x (2-10% faster)
-- **5 attributes**: 1.01x - 1.13x (1-13% faster)
-- **10 attributes**: 1.03x - 1.17x (3-17% faster)
-- **15 attributes**: 1.04x - 1.15x (4-15% faster)
-
-**Why improvements scale with attributes:**
-- More attributes = more calls to `getAllMatches()` per element during attribute parsing
-- Performance gain increases with both attribute count and document size
-
-**Why even no-attribute cases improve:**
-- `getAllMatches()` is called during parsing for tag name matching and internal regex operations
-- The spread operator optimization benefits all regex matching operations throughout the parser
+- **HIGH IMPACT: 6.5-7.1% faster** consistently across all scenarios
+- Small RSS: +7.1% faster
+- 10MB feeds: +6.5% faster
+- 50MB feeds: +6.6% faster
+- Replaces manual loop with spread operator (`[...match]`)
+- `getAllMatches()` is called extensively during parsing for regex operations
+- Spread operator is heavily optimized by modern JS engines
+- Zero risk - fully backward compatible
 
 ## Optimization Explained
 
