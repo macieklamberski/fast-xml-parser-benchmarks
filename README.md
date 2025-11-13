@@ -5,7 +5,7 @@ Collection of benchmarks for performance and memory optimizations for [fast-xml-
 ## Memory Optimizations
 
 - **[mem/line-ending-normalization](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/line-ending-normalization)** - mem: Skip line ending normalization for Unix files (M0 - Baseline)
-- **[mem/array-push-join](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/array-push-join)** - mem: Replace string concatenation with array push + join (M1 - HIGH IMPACT)
+- ❌ **[mem/array-push-join](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/array-push-join)** - UNPRODUCTIVE: Array push + join (8-94% slower, V8 already optimizes string concatenation)
 - **[mem/conditional-trim](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/conditional-trim)** - mem: Check for whitespace before trimming tag names (M4)
 - **[mem/reuse-regex](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/reuse-regex)** - mem: Reset regex lastIndex for safe module-scope regex reuse (M5)
 
