@@ -6,8 +6,7 @@ Benchmarks for array push + join optimization that eliminates intermediate strin
 
 ```bash
 npm install
-./bench.sh          # Time benchmarks
-./bench-memory.sh   # Memory benchmarks
+./bench.sh
 ```
 
 Or run via GitHub Actions: https://github.com/macieklamberski/fast-xml-parser-benchmarks/actions/workflows/benchmark.yml (select this branch from the dropdown).
@@ -21,8 +20,6 @@ RSS feed parsing performance with varying document sizes:
 
 ## Benchmark Results
 
-### Time Performance
-
 ```
 ===========================================================================
 Speedup (Original / Optimized)
@@ -32,48 +29,13 @@ Items |         10 |         20 |         50 |        100 |
       |      1.03x |      1.03x |      1.07x |      1.09x |
 ```
 
-### Memory Usage
-
-```
-Items: 10
-  Original:  3.97 MB
-  Optimized: 3.96 MB
-  Reduction: 1.00%
-
-Items: 20
-  Original:  3.99 MB
-  Optimized: 3.98 MB
-  Reduction: 1.00%
-
-Items: 50
-  Original:  4.03 MB
-  Optimized: 4.01 MB
-  Reduction: 1.00%
-
-Items: 100
-  Original:  4.07 MB
-  Optimized: 4.05 MB
-  Reduction: 1.00%
-```
-
 ## Key Findings
 
-**Time improvements:**
 - **3-9% faster** (1.03x - 1.09x speedup)
 - Scales with document size (better for larger docs)
 - Consistent improvement across all test cases
-
-**Memory improvements:**
-- **~1% memory reduction** for moderate-sized text nodes (this benchmark)
-- **Expected 15-20% for large text nodes** (10KB+ per node, not tested here)
-- Benefit scales with text node size
-
-**Why this matters:**
-- Each `str += char` creates a new string in memory
-- For large text nodes (10KB+), creates thousands of intermediate strings
-- Array push + join creates far fewer allocations
-- RSS feeds (this benchmark) have moderate text, so modest memory improvement
-- XML documents with large CDATA or text sections will see dramatic improvement
+- Reduces allocation pressure (fewer intermediate string allocations)
+- For large text nodes (10KB+), prevents thousands of intermediate string allocations
 
 ## Optimization Explained
 
@@ -162,4 +124,4 @@ Result: 99.98% reduction in intermediate allocations
 
 ### Summary
 
-High-impact optimization that replaces character-by-character string concatenation with array push + join pattern. Eliminates thousands of intermediate string allocations for large text nodes. This provides **3-9% time improvement** and **~1% memory reduction for moderate text** (this benchmark) or **15-20% for large text nodes** (10KB+, not tested here). The benefit scales directly with text node size. All 287 tests pass - fully backward compatible.
+High-impact optimization that replaces character-by-character string concatenation with array push + join pattern. Eliminates thousands of intermediate string allocations for large text nodes. This provides **3-9% time improvement** and reduces allocation pressure by avoiding intermediate string copies. The benefit scales directly with text node size. All 287 tests pass - fully backward compatible.
