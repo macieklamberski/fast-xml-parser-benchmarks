@@ -10,6 +10,7 @@ on:
         options:
           - mem/line-ending-normalization
           - mem/conditional-trim
+          - mem/reuse-regex
           - perf/optimize-wildcard-stopnodes
           - perf/entity-replacement-early-exit
           - perf/getallmatches-array-copy
