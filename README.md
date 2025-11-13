@@ -5,6 +5,7 @@ Collection of benchmarks for performance and memory optimizations for [fast-xml-
 ## Memory Optimizations
 
 - **[mem/line-ending-normalization](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/line-ending-normalization)** - mem: Skip line ending normalization for Unix files (M0 - Baseline)
+- **[mem/conditional-trim](https://github.com/macieklamberski/fast-xml-parser-benchmarks/tree/mem/conditional-trim)** - mem: Check for whitespace before trimming tag names (M4)
 
 ## Performance Optimizations
 

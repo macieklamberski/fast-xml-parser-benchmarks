@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - mem/line-ending-normalization
+          - mem/conditional-trim
           - perf/optimize-wildcard-stopnodes
           - perf/entity-replacement-early-exit
           - perf/getallmatches-array-copy
