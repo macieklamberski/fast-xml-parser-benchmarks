@@ -21,6 +21,26 @@ RSS feed parsing performance with varying `stopNodes` configurations:
 
 ## Benchmark Results
 
+### Comprehensive Tests (Small RSS, 10MB, 50MB)
+
+| Scenario      | rss-small      | rss-10mb       | rss-50mb       |
+|---------------|----------------|----------------|----------------|
+|               | ✓ 1.01x        | ✓ 1.00x        | ✓ 1.02x        |
+
+**✓ RSS-SMALL: 1.01x (0.9% FASTER)**
+- Original:  306.7ms
+- Optimized: 303.9ms
+
+**✓ RSS-10MB: 1.00x (0.3% FASTER)**
+- Original:  1245.4ms
+- Optimized: 1241.2ms
+
+**✓ RSS-50MB: 1.02x (1.8% FASTER)**
+- Original:  1807.2ms
+- Optimized: 1775.1ms
+
+### StopNodes-specific Benchmarks (With stopNodes configured)
+
 ```
 =======================================================================
 Speedup (Original / Optimized)
@@ -36,7 +56,12 @@ StopNodes \ Items |         10 |         20 |         50 |        100 |
 
 ## Key Findings
 
-**Performance scales with stopNodes count:**
+**Status: Minimal impact on general use, HIGH IMPACT for stopNodes users**
+
+**Comprehensive tests (no stopNodes):**
+- **General use**: 0.3-1.8% faster (minimal impact)
+
+**With stopNodes configured:**
 - **0 stopNodes**: ~1.00x (no regression at baseline)
 - **10 stopNodes**: ~5-11% faster
 - **25 stopNodes**: ~4-20% faster
