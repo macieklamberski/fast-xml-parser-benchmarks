@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - mem/line-ending-normalization
           - perf/optimize-wildcard-stopnodes
           - perf/entity-replacement-early-exit
           - perf/getallmatches-array-copy
